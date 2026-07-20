@@ -1,19 +1,21 @@
 {
-  "build": "BrainVision AI Build 1.1",
+  "build": "BrainVision AI Build 1.2",
   "created_files": [
     ".gitignore",
     ".python-version",
     ".streamlit/config.toml",
+    "DEPLOYMENT.md",
     "README.md",
     "app.py",
     "artifacts/.gitkeep",
     "config/training_config.yaml",
     "logs/.gitkeep",
     "model/.gitkeep",
+    "requirements-training.txt",
     "requirements.txt",
     "runtime.txt",
     "training/01_train_efficientnet.ipynb"
   ],
   "notebook_cells": 52,
-  "deployment_fix": "Adds repository-root app.py and Python 3.11 runtime pin."
+  "deployment_fix": "Separates Streamlit deployment dependencies from TensorFlow training dependencies; requires Python 3.11 selected in Community Cloud settings."
 }
