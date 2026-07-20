@@ -1,0 +1,15 @@
+{
+  "build": "BrainVision AI Build 1",
+  "created_files": [
+    ".gitignore",
+    "README.md",
+    "requirements.txt",
+    "runtime.txt",
+    "config/training_config.yaml",
+    "training/01_train_efficientnet.ipynb",
+    "model/.gitkeep",
+    "artifacts/.gitkeep",
+    "logs/.gitkeep"
+  ],
+  "notebook_cells": 52
+}
