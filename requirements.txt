@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+streamlit>=1.41,<2
 tensorflow==2.20.0
 keras==3.11.3
 numpy>=1.26,<2.3
@@ -12,8 +12,3 @@ jupyterlab>=4.2,<5
 ipykernel>=6.29,<7
 nbformat>=5.10,<6
 PyYAML>=6.0,<7
-=======
-streamlit
-numpy
-pillow
->>>>>>> d7c0f2c771867131744794e5c753c6bd5a884e3c

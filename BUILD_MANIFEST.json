@@ -1,15 +1,19 @@
 {
-  "build": "BrainVision AI Build 1",
+  "build": "BrainVision AI Build 1.1",
   "created_files": [
     ".gitignore",
+    ".python-version",
+    ".streamlit/config.toml",
     "README.md",
+    "app.py",
+    "artifacts/.gitkeep",
+    "config/training_config.yaml",
+    "logs/.gitkeep",
+    "model/.gitkeep",
     "requirements.txt",
     "runtime.txt",
-    "config/training_config.yaml",
-    "training/01_train_efficientnet.ipynb",
-    "model/.gitkeep",
-    "artifacts/.gitkeep",
-    "logs/.gitkeep"
+    "training/01_train_efficientnet.ipynb"
   ],
-  "notebook_cells": 52
+  "notebook_cells": 52,
+  "deployment_fix": "Adds repository-root app.py and Python 3.11 runtime pin."
 }
