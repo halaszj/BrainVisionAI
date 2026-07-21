@@ -1,15 +1,5 @@
-# BrainVision AI v0.1
+# BrainVision AI
 
-Graduate deep learning project for explainable brain MRI tumor classification.
+Version 5.0.0 Build 5
 
-## Current features
-- Professional Streamlit landing page
-- MRI upload interface
-- Project architecture
-- Hugging Face Docker ready
-
-## Planned
-- EfficientNetB0
-- Grad-CAM
-- PDF reports
-- Plotly analytics
+Delivery 1 repository scaffold.

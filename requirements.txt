@@ -1,8 +1,8 @@
 streamlit
 tensorflow
 numpy
-pillow
-opencv-python-headless
-plotly
+pandas
 matplotlib
+plotly
 reportlab
+Pillow
