@@ -2,5 +2,14 @@
   "project": "BrainVision AI",
   "version": "5.0.0",
   "build": 5,
-  "delivery": 1
+  "delivery": 4,
+  "status": "polished Streamlit application",
+  "features": [
+    "inference",
+    "probability chart",
+    "Grad-CAM",
+    "PDF report",
+    "session history",
+    "model information"
+  ]
 }

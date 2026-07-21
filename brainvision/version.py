@@ -1,2 +1,3 @@
-VERSION="5.0.0"
-BUILD="5"
+VERSION = "5.0.0"
+BUILD = "5"
+DELIVERY = "4"
