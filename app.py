@@ -1,6 +1,4 @@
-import json
 from datetime import datetime
-from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -15,11 +13,7 @@ from brainvision.config import (
     IMAGE_SIZE,
     MEDICAL_DISCLAIMER,
 )
-from brainvision.inference import (
-    load_labels,
-    load_metadata,
-    predict_image,
-)
+from brainvision.inference import load_labels, load_metadata, predict_image
 from brainvision.gradcam import make_gradcam_heatmap, overlay_heatmap
 from brainvision.reporting import create_pdf_report
 
@@ -27,67 +21,230 @@ st.set_page_config(
     page_title="BrainVision AI",
     page_icon="🧠",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 st.markdown(
     """
     <style>
-    .main-title {
-        font-size: 2.35rem;
-        font-weight: 750;
-        margin-bottom: 0;
+    .stApp {
+        background:
+            radial-gradient(circle at 15% 5%, rgba(124,77,255,.10), transparent 28%),
+            radial-gradient(circle at 90% 15%, rgba(0,188,212,.08), transparent 25%),
+            linear-gradient(180deg, #f8f9fd 0%, #ffffff 50%);
     }
-    .version-line {
-        color: #666;
-        margin-top: 0;
-        margin-bottom: 1.5rem;
+
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #17152b 0%, #252047 100%);
     }
-    .prediction-card {
-        border: 1px solid rgba(128,128,128,.28);
-        border-radius: 14px;
-        padding: 1rem 1.25rem;
+
+    [data-testid="stSidebar"] * {
+        color: #f7f5ff;
+    }
+
+    .hero {
+        border-radius: 24px;
+        padding: 2.2rem 2.4rem;
+        margin-bottom: 1.4rem;
+        background:
+            linear-gradient(120deg, rgba(42,31,89,.96), rgba(91,58,170,.93)),
+            linear-gradient(45deg, #24184c, #6045ba);
+        box-shadow: 0 18px 45px rgba(52, 36, 105, .20);
+        color: white;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .hero:after {
+        content: "";
+        position: absolute;
+        width: 240px;
+        height: 240px;
+        border-radius: 50%;
+        right: -70px;
+        top: -100px;
+        background: rgba(255,255,255,.09);
+    }
+
+    .hero h1 {
+        margin: 0;
+        font-size: 2.65rem;
+        line-height: 1.05;
+        color: white;
+    }
+
+    .hero p {
+        max-width: 760px;
+        margin: .8rem 0 0;
+        color: rgba(255,255,255,.84);
+        font-size: 1.02rem;
+    }
+
+    .version-pill {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: .38rem .75rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,.13);
+        border: 1px solid rgba(255,255,255,.18);
+        font-size: .82rem;
+        color: white;
+    }
+
+    .glass-card {
+        border: 1px solid rgba(98,76,177,.13);
+        background: rgba(255,255,255,.88);
+        border-radius: 20px;
+        padding: 1.25rem;
+        box-shadow: 0 12px 35px rgba(60,49,105,.09);
         margin-bottom: 1rem;
+    }
+
+    .result-card {
+        border-radius: 20px;
+        padding: 1.3rem 1.45rem;
+        color: white;
+        background: linear-gradient(135deg, #5f3dc4, #8b5cf6);
+        box-shadow: 0 15px 35px rgba(93,61,196,.24);
+        margin: .5rem 0 1.2rem;
+    }
+
+    .result-card .label {
+        opacity: .78;
+        font-size: .78rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .result-card .prediction {
+        font-size: 1.85rem;
+        font-weight: 750;
+        margin-top: .2rem;
+    }
+
+    .result-card .confidence {
+        font-size: 1rem;
+        margin-top: .35rem;
+        opacity: .92;
+    }
+
+    .mini-card {
+        border-radius: 16px;
+        padding: 1rem;
+        background: #ffffff;
+        border: 1px solid rgba(98,76,177,.12);
+        box-shadow: 0 8px 22px rgba(60,49,105,.07);
+        min-height: 112px;
+    }
+
+    .mini-card .eyebrow {
+        color: #756c96;
+        font-size: .76rem;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+    }
+
+    .mini-card .value {
+        color: #2d2649;
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-top: .35rem;
+    }
+
+    .section-title {
+        font-size: 1.35rem;
+        font-weight: 720;
+        color: #2f2850;
+        margin: .6rem 0 .8rem;
+    }
+
+    .soft-note {
+        border-radius: 14px;
+        background: #f2efff;
+        border: 1px solid #ded6ff;
+        color: #51467d;
+        padding: .85rem 1rem;
+        margin: .7rem 0 1rem;
+    }
+
+    div[data-testid="stFileUploader"] {
+        border-radius: 18px;
+        padding: .5rem;
+        background: rgba(255,255,255,.72);
+    }
+
+    div[data-testid="stMetric"] {
+        background: white;
+        border: 1px solid rgba(98,76,177,.11);
+        border-radius: 16px;
+        padding: .85rem 1rem;
+        box-shadow: 0 8px 22px rgba(60,49,105,.06);
+    }
+
+    .footer {
+        text-align: center;
+        color: #81799a;
+        font-size: .82rem;
+        padding: 1.5rem 0 .5rem;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
+
 @st.cache_resource
 def load_application_model():
     if not MODEL_PATH.exists():
         raise FileNotFoundError(
-            f"Model not found at {MODEL_PATH}. "
-            "Copy the exported model from Delivery 2 into the model folder."
+            f"Model not found at {MODEL_PATH}. Copy the trained model from Delivery 2."
         )
     if not LABELS_PATH.exists():
-        raise FileNotFoundError(
-            f"Labels file not found at {LABELS_PATH}."
-        )
+        raise FileNotFoundError(f"Labels file not found at {LABELS_PATH}.")
 
     model = tf.keras.models.load_model(MODEL_PATH)
     labels = load_labels(LABELS_PATH)
     metadata = load_metadata(METADATA_PATH)
     return model, labels, metadata
 
+
 def initialize_session():
     if "history" not in st.session_state:
         st.session_state.history = []
 
-initialize_session()
 
-st.markdown('<div class="main-title">🧠 BrainVision AI</div>', unsafe_allow_html=True)
-st.markdown(
-    f'<div class="version-line">Version {VERSION} • Build {BUILD} • Delivery {DELIVERY}</div>',
-    unsafe_allow_html=True,
-)
+def hero():
+    st.markdown(
+        f"""
+        <div class="hero">
+            <h1>🧠 BrainVision AI</h1>
+            <p>
+                Upload a brain MRI image to explore the model's predicted class,
+                confidence levels, and Grad-CAM explanation.
+            </p>
+            <span class="version-pill">
+                Version {VERSION} &nbsp;•&nbsp; Build {BUILD} &nbsp;•&nbsp; Delivery 4.1
+            </span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+initialize_session()
+hero()
 
 with st.sidebar:
-    st.header("Navigation")
+    st.markdown("## BrainVision AI")
+    st.caption("Deep-learning MRI classifier")
     page = st.radio(
-        "Choose a page",
+        "Navigation",
         ["MRI Analysis", "Session History", "Model Information", "About"],
+        label_visibility="collapsed",
     )
+    st.divider()
+    st.markdown("### Model classes")
+    st.caption("Glioma · Meningioma · No Tumor · Pituitary")
     st.divider()
     st.caption(MEDICAL_DISCLAIMER)
 
@@ -100,30 +257,51 @@ except Exception as error:
     load_error = str(error)
 
 if page == "MRI Analysis":
-    st.subheader("Upload a Brain MRI Image")
-    st.write(
-        "Upload one MRI image to generate a four-class prediction, "
-        "confidence scores, Grad-CAM visualization, and a PDF report."
+    st.markdown('<div class="section-title">MRI Analysis</div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="soft-note">
+            Choose a clear brain MRI image. The application will show the model's
+            prediction, confidence distribution, and a Grad-CAM heatmap.
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     if not model_ready:
         st.error(load_error)
         st.info(
-            "Expected files:\n\n"
-            "- `model/brainvision_efficientnetb0_final.keras`\n"
-            "- `model/labels.json`\n"
-            "- `model/model_metadata.json` (optional)"
+            "Place `brainvision_efficientnetb0_final.keras` and `labels.json` "
+            "inside the `model` folder."
         )
         st.stop()
 
     uploaded_file = st.file_uploader(
-        "MRI image",
+        "Upload MRI image",
         type=["png", "jpg", "jpeg", "bmp"],
-        help="Use a clear MRI image in PNG, JPG, JPEG, or BMP format.",
+        help="PNG, JPG, JPEG, or BMP",
     )
 
     if uploaded_file is None:
-        st.info("Upload an image to begin.")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown(
+                '<div class="mini-card"><div class="eyebrow">Step 1</div>'
+                '<div class="value">Upload MRI</div></div>',
+                unsafe_allow_html=True,
+            )
+        with col2:
+            st.markdown(
+                '<div class="mini-card"><div class="eyebrow">Step 2</div>'
+                '<div class="value">Review Prediction</div></div>',
+                unsafe_allow_html=True,
+            )
+        with col3:
+            st.markdown(
+                '<div class="mini-card"><div class="eyebrow">Step 3</div>'
+                '<div class="value">Download Report</div></div>',
+                unsafe_allow_html=True,
+            )
     else:
         try:
             original_image = Image.open(uploaded_file)
@@ -145,31 +323,35 @@ if page == "MRI Analysis":
                 alpha=0.40,
             )
 
-            left, right = st.columns(2)
-
-            with left:
-                st.image(
-                    prediction["display_image"],
-                    caption="Uploaded MRI",
-                    use_container_width=True,
-                )
-
-            with right:
-                st.image(
-                    gradcam_image,
-                    caption=f"Grad-CAM • Layer: {layer_name}",
-                    use_container_width=True,
-                )
-
             st.markdown(
                 f"""
-                <div class="prediction-card">
-                    <h3>{prediction["predicted_class"].title()}</h3>
-                    <p><strong>Confidence:</strong> {prediction["confidence"]:.2%}</p>
+                <div class="result-card">
+                    <div class="label">Predicted class</div>
+                    <div class="prediction">{prediction["predicted_class"].title()}</div>
+                    <div class="confidence">
+                        Confidence: {prediction["confidence"]:.2%}
+                    </div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
+
+            image_col, gradcam_col = st.columns(2, gap="large")
+
+            with image_col:
+                st.markdown("#### Original MRI")
+                st.image(
+                    prediction["display_image"],
+                    use_container_width=True,
+                )
+
+            with gradcam_col:
+                st.markdown("#### Grad-CAM Explanation")
+                st.image(
+                    gradcam_image,
+                    use_container_width=True,
+                )
+                st.caption(f"Feature layer: {layer_name}")
 
             probability_df = pd.DataFrame(
                 {
@@ -178,19 +360,19 @@ if page == "MRI Analysis":
                 }
             ).sort_values("Probability", ascending=False)
 
-            st.subheader("Class Probabilities")
+            st.markdown(
+                '<div class="section-title">Confidence Breakdown</div>',
+                unsafe_allow_html=True,
+            )
+
+            metric_columns = st.columns(len(probability_df))
+            for column, row in zip(metric_columns, probability_df.itertuples()):
+                with column:
+                    st.metric(row.Class.title(), f"{row.Probability:.1%}")
+
             st.bar_chart(
                 probability_df.set_index("Class"),
                 use_container_width=True,
-            )
-            st.dataframe(
-                probability_df.assign(
-                    Probability=probability_df["Probability"].map(
-                        lambda value: f"{value:.2%}"
-                    )
-                ),
-                use_container_width=True,
-                hide_index=True,
             )
 
             record = {
@@ -200,9 +382,7 @@ if page == "MRI Analysis":
                 "confidence": prediction["confidence"],
             }
 
-            if not st.session_state.history or (
-                st.session_state.history[-1] != record
-            ):
+            if not st.session_state.history or st.session_state.history[-1] != record:
                 st.session_state.history.append(record)
 
             pdf_bytes = create_pdf_report(
@@ -214,11 +394,12 @@ if page == "MRI Analysis":
             )
 
             st.download_button(
-                "Download PDF Report",
+                "⬇ Download Prediction Report",
                 data=pdf_bytes,
                 file_name="BrainVisionAI_Prediction_Report.pdf",
                 mime="application/pdf",
                 use_container_width=True,
+                type="primary",
             )
 
             st.warning(MEDICAL_DISCLAIMER)
@@ -227,31 +408,41 @@ if page == "MRI Analysis":
             st.exception(error)
 
 elif page == "Session History":
-    st.subheader("Session Prediction History")
+    st.markdown(
+        '<div class="section-title">Session History</div>',
+        unsafe_allow_html=True,
+    )
 
     if not st.session_state.history:
-        st.info("No predictions have been made during this session.")
+        st.info("No MRI images have been analyzed during this session.")
     else:
         history_df = pd.DataFrame(st.session_state.history)
-        history_df["confidence"] = history_df["confidence"].map(
+        display_df = history_df.copy()
+        display_df["confidence"] = display_df["confidence"].map(
             lambda value: f"{value:.2%}"
         )
-        st.dataframe(history_df, use_container_width=True, hide_index=True)
 
-        history_csv = history_df.to_csv(index=False).encode("utf-8")
-        st.download_button(
-            "Download Session History",
-            data=history_csv,
-            file_name="BrainVisionAI_Session_History.csv",
-            mime="text/csv",
-        )
+        st.dataframe(display_df, use_container_width=True, hide_index=True)
 
-        if st.button("Clear Session History"):
-            st.session_state.history = []
-            st.rerun()
+        left, right = st.columns(2)
+        with left:
+            st.download_button(
+                "Download History CSV",
+                data=display_df.to_csv(index=False).encode("utf-8"),
+                file_name="BrainVisionAI_Session_History.csv",
+                mime="text/csv",
+                use_container_width=True,
+            )
+        with right:
+            if st.button("Clear History", use_container_width=True):
+                st.session_state.history = []
+                st.rerun()
 
 elif page == "Model Information":
-    st.subheader("Model Information")
+    st.markdown(
+        '<div class="section-title">Model Information</div>',
+        unsafe_allow_html=True,
+    )
 
     if not model_ready:
         st.error(load_error)
@@ -259,54 +450,73 @@ elif page == "Model Information":
         info = {
             "Project": metadata.get("project_name", "BrainVision AI"),
             "Version": metadata.get("version", VERSION),
-            "Build": metadata.get("build", BUILD),
             "Architecture": metadata.get("architecture", "EfficientNetB0"),
             "Image size": str(metadata.get("image_size", list(IMAGE_SIZE))),
             "Classes": ", ".join(metadata.get("class_names", labels)),
             "Test accuracy": (
                 f"{metadata['test_accuracy']:.2%}"
-                if "test_accuracy" in metadata
-                else "Not provided"
+                if "test_accuracy" in metadata else "Not provided"
             ),
             "Created": metadata.get("created_at", "Not provided"),
         }
 
-        st.dataframe(
-            pd.DataFrame(
-                {"Property": list(info.keys()), "Value": list(info.values())}
-            ),
-            use_container_width=True,
-            hide_index=True,
-        )
+        cols = st.columns(3)
+        entries = list(info.items())
+        for index, (label, value) in enumerate(entries):
+            with cols[index % 3]:
+                st.markdown(
+                    f'<div class="mini-card"><div class="eyebrow">{label}</div>'
+                    f'<div class="value">{value}</div></div>',
+                    unsafe_allow_html=True,
+                )
+                st.write("")
 
-        st.subheader("Model Summary")
-        summary_lines = []
-        model.summary(print_fn=summary_lines.append)
-        st.code("\n".join(summary_lines), language="text")
+        with st.expander("View full Keras model summary"):
+            summary_lines = []
+            model.summary(print_fn=summary_lines.append)
+            st.code("\n".join(summary_lines), language="text")
 
 elif page == "About":
-    st.subheader("About BrainVision AI")
-    st.write(
-        "BrainVision AI is an educational deep-learning project that "
-        "classifies brain MRI images into four categories using an "
-        "EfficientNetB0 transfer-learning model."
-    )
+    st.markdown('<div class="section-title">About the Project</div>', unsafe_allow_html=True)
 
-    st.markdown(
-        """
-        **Main features**
+    left, right = st.columns([1.5, 1])
 
-        - Brain MRI upload
-        - Four-class prediction
-        - Confidence visualization
-        - Grad-CAM explanation
-        - Downloadable PDF report
-        - Session history
-        - Model metadata display
-        """
-    )
+    with left:
+        st.markdown(
+            """
+            <div class="glass-card">
+                <h3>What BrainVision AI Does</h3>
+                <p>
+                    BrainVision AI is an educational image-classification project
+                    built with TensorFlow, EfficientNetB0, and Streamlit.
+                </p>
+                <p>
+                    It classifies uploaded MRI images into glioma, meningioma,
+                    pituitary tumor, or no-tumor categories.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with right:
+        st.markdown(
+            """
+            <div class="glass-card">
+                <h3>Included Features</h3>
+                <p>✓ MRI upload</p>
+                <p>✓ Confidence scores</p>
+                <p>✓ Grad-CAM heatmap</p>
+                <p>✓ PDF report</p>
+                <p>✓ Session history</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     st.warning(MEDICAL_DISCLAIMER)
 
-st.divider()
-st.caption(f"BrainVision AI • Version {VERSION} • Build {BUILD} • Delivery {DELIVERY}")
+st.markdown(
+    f'<div class="footer">BrainVision AI • Version {VERSION} • Build {BUILD}</div>',
+    unsafe_allow_html=True,
+)

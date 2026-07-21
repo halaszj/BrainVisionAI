@@ -1,1 +1,1 @@
-Delivery 2 will contain the complete Colab notebook.
+Place the complete training notebook from Delivery 2 here.

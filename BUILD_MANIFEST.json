@@ -2,14 +2,7 @@
   "project": "BrainVision AI",
   "version": "5.0.0",
   "build": 5,
-  "delivery": 4,
-  "status": "polished Streamlit application",
-  "features": [
-    "inference",
-    "probability chart",
-    "Grad-CAM",
-    "PDF report",
-    "session history",
-    "model information"
-  ]
+  "delivery": 5,
+  "status": "integration milestone",
+  "notes": "Populate model/ using outputs from the training notebook before running the app."
 }
