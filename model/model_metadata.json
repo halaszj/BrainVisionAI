@@ -1,0 +1,21 @@
+{
+  "project_name": "BrainVision AI",
+  "version": "5.0.0",
+  "build": "5",
+  "model_name": "brainvision_efficientnetb0",
+  "architecture": "EfficientNetB0",
+  "image_size": [
+    224,
+    224
+  ],
+  "class_names": [
+    "glioma",
+    "meningioma",
+    "notumor",
+    "pituitary"
+  ],
+  "test_accuracy": 0.8637499809265137,
+  "test_loss": 0.4407607913017273,
+  "created_at": "2026-07-21T18:38:26",
+  "medical_disclaimer": "Educational use only. This model is not intended to diagnose, treat, cure, or prevent any medical condition."
+}
